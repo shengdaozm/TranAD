@@ -16,8 +16,8 @@ maxint = 200000
 # z-normalized euclidean distance
 def dist(t, q):
 	m = q.shape[0]
-	# t, q = t.reshape(-1), q.reshape(-1)
-	# znorm2 = 2 * m * (1 - (np.dot(q, t) - m * np.mean(q) * np.mean(t)) / (m * np.std(q) * np.std(t)))
+	# t,  (1 - (np.dot(q, t) - m * np.mean(q) * np.mean(t)) / (m * np.std(q = t.reshape(-1), q.reshape(-1)
+	# znorm2 = 2 * m *q) * np.std(t)))
 	znorm2 = np.mean((t - q) ** 2)
 	return np.sqrt(znorm2)
 

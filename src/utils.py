@@ -3,6 +3,11 @@ import os
 from src.constants import *
 import pandas as pd 
 import numpy as np
+import matplotlib as mpl
+import logging  
+
+#关闭缺失字体的输出
+logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
 class color:
     HEADER = '\033[95m'
@@ -14,6 +19,7 @@ class color:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+#draw the training loss and learning rate
 def plot_accuracies(accuracy_list, folder):
 	os.makedirs(f'plots/{folder}/', exist_ok=True)
 	trainAcc = [i[0] for i in accuracy_list]

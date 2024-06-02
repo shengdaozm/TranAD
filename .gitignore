@@ -136,3 +136,7 @@ dmypy.json
 data/WADI/table_WADI.pdf
 data/WADI/WADI_14days.csv
 data/WADI/WADI_attackdata.csv
+
+
+# other_things
+pictures/

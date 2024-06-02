@@ -1,8 +1,15 @@
+import os
+import torch
+
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_pdf import PdfPages
-import statistics
-import os, torch
+import matplotlib as mpl
+import scienceplots
 import numpy as np
+from matplotlib.backends.backend_pdf import PdfPages
+
+#关闭字体缺失的报告
+plt.rcParams['errorbar.capsize'] = 3.5
+
 
 plt.style.use(['science', 'ieee'])
 plt.rcParams["text.usetex"] = False
@@ -15,6 +22,7 @@ def smooth(y, box_pts=1):
     y_smooth = np.convolve(y, box, mode='same')
     return y_smooth
 
+#the function to plot the results
 def plotter(name, y_true, y_pred, ascore, labels):
 	if 'TranAD' in name: y_true = torch.roll(y_true, 1, 0)
 	os.makedirs(os.path.join('plots', name), exist_ok=True)
