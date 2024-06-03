@@ -25,7 +25,7 @@ def convert_to_windows(data, model):
             w = data[i - w_size:i]
         else:
             w = torch.cat([data[0].repeat(w_size - i, 1), data[0:i]])
-        windows.append(w if 'TranAD' in args.model or 'Attention' in args.model else w.view(-1))
+        windows.append(w if 'TranAD' in arges_model or 'Attention' in arges_model else w.view(-1))
     return torch.stack(windows)
 
 # the function is to cut the dataset to a smaller size
@@ -52,7 +52,7 @@ def load_dataset(dataset):
 # 模型训练过程中保存的模型检查点文件。
 # 这些文件包含了模型在训练过程中的权重、偏置和其他参数信息。
 def save_model(model, optimizer, scheduler, epoch, accuracy_list):
-    folder = f'checkpoints/{args.model}_{args.dataset}/'
+    folder = f'checkpoints/{arges_model}_{arges_dataset}/'
     os.makedirs(folder, exist_ok=True)
     file_path = f'{folder}/model.ckpt'
     torch.save({
@@ -69,8 +69,8 @@ def load_model(modelname, dims):
     model = model_class(dims).double()
     optimizer = torch.optim.AdamW(model.parameters(), lr=model.lr, weight_decay=1e-5)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 5, 0.9)
-    fname = f'checkpoints/{args.model}_{args.dataset}/model.ckpt'
-    if os.path.exists(fname) and (not args.retrain or args.test):
+    fname = f'checkpoints/{arges_model}_{arges_dataset}/model.ckpt'
+    if os.path.exists(fname) and (not args.retrain or arges_test):
         print(f"{color.GREEN}Loading pre-trained model: {model.name}{color.ENDC}")
         checkpoint = torch.load(fname)
         model.load_state_dict(checkpoint['model_state_dict'])
@@ -320,11 +320,12 @@ def backprop(epoch, model, data, dataO, optimizer, scheduler, training=True):
         else:
             return loss.detach().numpy(), y_pred.detach().numpy()
 
-if __name__ == '__main__':
-    train_loader, test_loader, labels = load_dataset(args.dataset)
-    if args.model in ['MERLIN']:
-        eval(f'run_{args.model.lower()}(test_loader, labels, args.dataset)')
-    model, optimizer, scheduler, epoch, accuracy_list = load_model(args.model, labels.shape[1])
+
+def run(arges_dataset,arges_model,arges_test):
+    train_loader, test_loader, labels = load_dataset(arges_dataset)
+    if arges_model in ['MERLIN']:
+        eval(f'run_{arges_model.lower()}(test_loader, labels, arges_dataset)')
+    model, optimizer, scheduler, epoch, accuracy_list = load_model(arges_model, labels.shape[1])
 
     ## Prepare data
     trainD, testD = next(iter(train_loader)), next(iter(test_loader))
@@ -334,8 +335,8 @@ if __name__ == '__main__':
         trainD, testD = convert_to_windows(trainD, model), convert_to_windows(testD, model)
 
     ### Training phase
-    if not args.test:
-        print(f'{color.HEADER}Training {args.model} on {args.dataset}{color.ENDC}')
+    if not arges_test:
+        print(f'{color.HEADER}Training {arges_model} on {arges_dataset}{color.ENDC}')
         num_epochs = 5;
         e = epoch + 1;
         start = time()
@@ -346,19 +347,19 @@ if __name__ == '__main__':
         print(color.BOLD + 'Training time: ' + "{:10.4f}".format(time() - start) + ' s' + color.ENDC)
         # 保存模型
         save_model(model, optimizer, scheduler, e, accuracy_list)
-        plot_accuracies(accuracy_list, f'{args.model}_{args.dataset}')
+        plot_accuracies(accuracy_list, f'{arges_model}_{arges_dataset}')
 
     ### Testing phase
     torch.zero_grad = True
     model.eval()
-    print(f'{color.HEADER}Testing {args.model} on {args.dataset}{color.ENDC}')
+    print(f'{color.HEADER}Testing {arges_model} on {arges_dataset}{color.ENDC}')
     # 测试模型
     loss, y_pred = backprop(0, model, testD, testO, optimizer, scheduler, training=False)
 
     ### Plot curves
-    if not args.test:
+    if not arges_test:
         if 'TranAD' in model.name: testO = torch.roll(testO, 1, 0)
-        plotter(f'{args.model}_{args.dataset}', testO, y_pred, loss, labels)
+        plotter(f'{arges_model}_{arges_dataset}', testO, y_pred, loss, labels)
 
     ### Scores 
     df = pd.DataFrame()
@@ -381,5 +382,10 @@ if __name__ == '__main__':
     result.update(ndcg(loss, labels))
     print(df)
     pprint(result)
-# pprint(getresults2(df, result))
-# beep(4)
+
+if __name__ == '__main__':
+    datasets = ['synthetic', 'SMD', 'SWaT', 'SMAP', 'MSL', 'UCR', 'MBA', 'NAB']
+    model = ['TranAD','GDN','MAD_GAN', 'MTAD_GAT', 'USAD', 'OmniAnomaly', 'LSTM_AD']
+    for arges_dataset in datasets:
+        for arges_model in model:
+            run(arges_dataset,arges_model,False)
